@@ -1,6 +1,6 @@
 ---
 name: dsh-java-plugin-skills
-description: 辅助用户快速完成 deepseek-harness-java（DSH Java，Java Agent 运行时基座）与业务应用的智能体对接。可以按用户诉求从零开发一个 Java 应用（智能客服、MySQL 运维平台等）并以 Java Native 插件方式接入 DSH；也可以把用户已有 Java 应用插件化对接 DSH。支持启动/部署 Harness 服务与应用服务、安装激活插件、提供架构图/说明文档/面试资料。触发词：「对接 deepseek-harness-java」「DSH 插件开发」「Java Native Plugin」「智能客服接入」「插件化对接 Agent」「启动 DSH」「harness 插件安装」。
+description: 辅助用户快速完成 deepseek-harness-java（DSH Java，Java Agent 运行时基座）与业务应用的智能体对接。可以按用户诉求从零开发任意领域的 Java AI 应用（智能客服、MySQL 运维平台、研学旅游、预订平台等）并以 Java Native 插件方式接入 DSH；也可以把用户已有 Java 应用插件化对接 DSH。支持启动/部署 Harness 服务与应用服务、安装激活插件、提供架构图/说明文档/面试资料。触发词：「对接 deepseek-harness-java」「DSH 插件开发」「Java Native Plugin」「智能客服接入」「开发一个 AI 应用」「XX 的 AI 应用/智能体」「插件化对接 Agent」「启动 DSH」「harness 插件安装」。
 license: Apache-2.0
 metadata:
   author: xfg-studio
@@ -45,9 +45,13 @@ DSH 是 Java Agent 运行时基座（端口 8090），提供 Web 控制台、Age
 
 ### 阶段 0：澄清需求
 问清楚（不确定时才问，一次问完）：
-- 有没有现成应用？有 → 要它仓库地址/路径 + 应用 API 概况；没有 → 要做什么应用（客服/运维/其他）、端口偏好
+- **新开发还是对接已有应用？**（这是第一问，二选一确认）
+- 有现成应用 → 要仓库地址/路径 + 应用 API 概况
+- 新开发 → 明确业务领域与核心场景（如研学旅游：行程/路线/报名/订单；客服：商品/订单/物流），列出该领域 AI 应能查询和操作的核心实体清单
 - 运行环境：本地 macOS/Linux 还是远程服务器？有没有 JDK 17+ / Maven？
 - DSH 是否已在运行（`curl http://127.0.0.1:8090` 探测）？
+
+**可默认、不必问**（直接采用并在交付时说明）：端口用 18081 起顺延（避开 18080/8091）；数据用内存 Map 预置演示数据（与 2d-weekend-mall 一致，零依赖快速跑通）；前端用原生 HTML/CSS/JS 单页；包名 `cn.xiaofuge.<domain>`。
 
 ### 阶段 1：环境准备
 ```bash
@@ -65,6 +69,13 @@ bash <skill_path>/scripts/start_harness.sh
 - 无应用：按 `references/plugin-dev-guide.md` 的 Spring Boot 应用骨架 + 插件骨架生成工程（Maven 多模块：`xxx-app` + `xxx-plugin`）
 - 有应用：只生成 `xxx-plugin` 模块，工具通过 HTTP 调应用 API
 - 遵循两个案例的模式（见 case 文档）：plugin.yaml + SPI + AbstractHarnessPlugin + AbstractTool，提供构建命令 `mvn package -DskipTests`，构建必须亲自执行并确认 JAR 生成
+
+**全新业务应用（任意领域，如研学旅游/预订平台/内容社区）设计范式**（从案例泛化，必须遵守）：
+1. **先列实体再设计工具**：从业务场景提取核心实体（如研学旅游 = 营地/路线/排期/报名订单），每个"查询/详情/状态"类实体操作对应一个工具，通常 3~6 个
+2. **工具命名动词+宾语**：如 `search_routes`、`route_detail`、`enrollment_query`、`itinerary_query`；只读查询优先，写操作（报名/下单）需在 description 中声明风险
+3. **app 模块最小闭环**：REST API（list/detail/create）+ 内存预置数据（8 条左右）+ 单页前端（业务主界面 + AI 助手面板代理 DSH `/api/agent/stream`，参考 case-2d-weekend-mall 模式）
+4. **系统提示词划边界**：写明该业务工具何时必须调用（涉及真实数据必须查证）、禁止编造
+5. **application.yml 预留**：`harness-base-url`、`agent-id`、`service-token`（与插件配置对应）；改 token 后需停启插件
 
 ### 阶段 4：安装插件并交付
 ```bash
