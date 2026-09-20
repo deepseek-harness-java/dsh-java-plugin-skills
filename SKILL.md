@@ -34,6 +34,7 @@ DSH 是 Java Agent 运行时基座（端口 8090），提供 Web 控制台、Age
 - `references/plugin-dev-guide.md` — 插件开发全流程（含完整代码骨架，从两个真实案例提炼）
 - `references/deploy-guide.md` — 启动部署指南（本地/服务器/无 Java 环境）
 - `references/case-2d-weekend-mall.md` / `references/case-dsh-java-mysql.md` — 两个完整案例
+- `references/ui-design-guide.md` — 应用 UI 设计指南（design tokens、无 AI 味清单、AI 助手面板规范），生成前端必读
 - `references/architecture.md` — 架构图与说明（可导出给用户）
 - `references/interview-notes.md` — 面试资料
 - `scripts/check_env.sh` — 环境检查（Java/Maven 版本，缺失时提示安装方式）
@@ -74,6 +75,7 @@ bash <skill_path>/scripts/start_harness.sh
 1. **先列实体再设计工具**：从业务场景提取核心实体（如研学旅游 = 营地/路线/排期/报名订单），每个"查询/详情/状态"类实体操作对应一个工具，通常 3~6 个
 2. **工具命名动词+宾语**：如 `search_routes`、`route_detail`、`enrollment_query`、`itinerary_query`；只读查询优先，写操作（报名/下单）需在 description 中声明风险
 3. **app 模块最小闭环**：REST API（list/detail/create）+ 内存预置数据（8 条左右）+ 单页前端（业务主界面 + AI 助手面板代理 DSH `/api/agent/stream`，参考 case-2d-weekend-mall 模式）
+   - **UI 必须遵守 `references/ui-design-guide.md`**：先定 design tokens（领域主色+暖白底+大圆角+系统字体栈），界面要像认真做过的产品，无 AI 味（禁止默认蓝紫渐变/emoji 图标/裸表格/Lorem ipsum）；AI 面板用右下角浮动按钮+侧滑流式渲染
 4. **系统提示词划边界**：写明该业务工具何时必须调用（涉及真实数据必须查证）、禁止编造
 5. **application.yml 预留**：`harness-base-url`、`agent-id`、`service-token`（与插件配置对应）；改 token 后需停启插件
 
@@ -101,3 +103,4 @@ bash <skill_path>/scripts/smoke_test.sh
 - 插件不直连数据库等敏感资源，通过业务应用 Admin API 走 HTTP，守住安全边界
 - DSH 未配置模型时对话报错，先检查「设置 → 模型设置」
 - 端口约定：DSH 8090；案例应用 18080（商城）/ 8091（MySQL 平台），新应用避开这些端口
+- 新应用前端必须先读 `references/ui-design-guide.md` 并按其自检"AI 味清单"，出现 AI 味信号（默认蓝紫渐变/emoji 图标/裸表格/无 hover 过渡）即为不合格
