@@ -35,6 +35,7 @@ DSH 是 Java Agent 运行时基座（端口 8090），提供 Web 控制台、Age
 - `references/deploy-guide.md` — 启动部署指南（本地/服务器/无 Java 环境）
 - `references/case-2d-weekend-mall.md` / `references/case-dsh-java-mysql.md` — 两个完整案例
 - `references/ui-design-guide.md` — 应用 UI 设计指南（design tokens、无 AI 味清单、AI 助手面板规范），生成前端必读
+- `references/prompt-recipes.md` — 案例储备库（商城/金融/出行/外卖/点评/医疗/教育/政务等 20 个一句话完整案例 prompt），用户询问"能做什么/举个例子"时抽 3~5 个展示
 - `references/architecture.md` — 架构图与说明（可导出给用户）
 - `references/interview-notes.md` — 面试资料
 - `scripts/check_env.sh` — 环境检查（Java/Maven 版本，缺失时提示安装方式）
@@ -47,6 +48,7 @@ DSH 是 Java Agent 运行时基座（端口 8090），提供 Web 控制台、Age
 ### 阶段 0：澄清需求
 问清楚（不确定时才问，一次问完）：
 - **新开发还是对接已有应用？**（这是第一问，二选一确认）
+- 用户没想好做什么 → 读 `references/prompt-recipes.md`，**抽 3~5 个跨大分类案例**（完整话术原文展示，不要只给标题），说明"选定任意一个即可一句话完成开发+部署启动运行"；用户选定或原样粘贴某条 prompt 后直接进入开发，不再追问
 - 有现成应用 → 要仓库地址/路径 + 应用 API 概况
 - 新开发 → 明确业务领域与核心场景（如研学旅游：行程/路线/报名/订单；客服：商品/订单/物流），列出该领域 AI 应能查询和操作的核心实体清单
 - 运行环境：本地 macOS/Linux 还是远程服务器？有没有 JDK 17+ / Maven？
