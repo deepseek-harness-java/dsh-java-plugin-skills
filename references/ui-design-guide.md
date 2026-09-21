@@ -73,6 +73,8 @@
 - **空态**：不是一片空白——给一句人话（"还没有报名记录，去看看路线吧"）+ 一个行动按钮
 - **Toast**：成功绿/失败红，右上角滑入动画（`transform: translateX(120%) → 0`）
 - **表单**：label 常显（不用 placeholder 当 label）、聚焦主色描边、错误内联红字
+- **显隐切换**：用 `hidden` 属性控显隐时，若元素 CSS 写死了 `display`（如 `display:flex`），会**覆盖浏览器对 `hidden` 的默认 `display:none`**，导致"关不掉"。必须全局兜底 `[hidden] { display: none !important; }`（青苔记账弹层曾因此关不掉）
+- **弹层/抽屉**：必须同时支持关闭按钮、遮罩点击、Esc 三种关闭方式；提交成功后自动关闭
 - **响应式**：`clamp()` 字号、`grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))`、移动端单列
 - **微交互**：hover 上浮/变色、按下 `scale(.98)`、数字变化用滚动动画（参考 50projects50days 的 Incrementing Counter）
 
