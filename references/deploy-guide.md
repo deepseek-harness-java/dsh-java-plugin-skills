@@ -41,12 +41,31 @@ chmod +x deploy-standard.sh && ./deploy-standard.sh
 
 Spring Boot 应用：`java -jar xxx-app/target/xxx-app-*.jar`（或 `mvn spring-boot:run -pl xxx-app`）。案例端口：商城 18080、MySQL 平台 8091。
 
-## 部署到远程服务器（SSH 可用时）
+## 部署到远程服务器（推荐用一键脚本）
 
-1. 用 deploy_files 上传宿主 JAR、应用 JAR、插件 JAR 到服务器（如 `/opt/dsh/`）
-2. 服务器上：`nohup java -jar /opt/dsh/deepseek-harness-java-app.jar > /tmp/dsh.log 2>&1 &`，同法启动应用
+### 方式一：一键部署脚本（首选）
+
+```bash
+bash <skill_path>/scripts/deploy_remote.sh -t root@<服务器IP> \
+  -a xxx-app/target/xxx-app-*.jar \
+  -g xxx-plugin/target/xxx-plugin-*.jar \
+  [-s skip]   # 服务器上已有 DSH JAR 时跳过上传（首次部署不加）
+```
+
+脚本自动完成：SSH 连通性检查 → 上传 JAR 到 `/opt/dsh/` → 生成远端重启脚本 `restart_all.sh`（显式 `--server.port`，防 SERVER_PORT 环境变量劫持）→ 启动 → 探活 → 输出重启/日志/插件激活指引。
+
+### 方式二：手工部署（脚本不可用时）
+
+1. 上传宿主 JAR、应用 JAR、插件 JAR 到服务器（如 `/opt/dsh/`）
+2. 服务器上：`nohup java -jar /opt/dsh/deepseek-harness-java-app.jar --server.port=8090 > /opt/dsh/logs/dsh.log 2>&1 &`，同法启动应用（务必显式 `--server.port`）
 3. 防火墙/安全组放行 8090 与应用端口
 4. 交付地址时使用服务器公网 IP/域名
+
+### 云部署注意事项
+
+- 插件需在远端 DSH 重新 install+activate（本地插件状态不会跟着 JAR 过去）
+- 交付后全部验证项（逐工具实测/UI/探活）必须在远端地址重跑，本地验证通过 ≠ 远端可用
+- 生命周期说明要给远端重启命令：`ssh <host> 'bash /opt/dsh/restart_all.sh'`
 
 ## 交付清单（每次部署完成后必须给用户）
 

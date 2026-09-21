@@ -4,7 +4,7 @@ description: 辅助用户快速完成 deepseek-harness-java（DSH Java，Java Ag
 license: Apache-2.0
 metadata:
   author: xfg-studio
-  version: "1.3.0"
+  version: "1.5.1"
   category: agent-plugin
   homepage: https://github.com/fuzhengwei/deepseek-harness
 ---
@@ -33,9 +33,10 @@ DSH 是 Java Agent 运行时基座（端口 8090），提供 Web 控制台、Age
 - `runtime/deepseek-harness-java-app.jar` — DSH 宿主可执行 JAR，直接 `java -jar` 启动
 - `references/plugin-dev-guide.md` — 插件开发全流程（含完整代码骨架，从两个真实案例提炼）
 - `references/deploy-guide.md` — 启动部署指南（本地/服务器/无 Java 环境）
+- `scripts/deploy_remote.sh` — 云服务器一键部署（上传 JAR → 生成远端 restart_all.sh → 启动 → 探活 → 输出重启/日志/插件激活指引），用户要云部署时必用
 - `references/case-2d-weekend-mall.md` / `references/case-dsh-java-mysql.md` — 两个完整案例
 - `references/ui-design-guide.md` — 应用 UI 设计指南（design tokens、无 AI 味清单、AI 助手面板规范），生成前端必读
-- `references/prompt-recipes.md` — 案例储备库（商城/金融/出行/外卖/点评/医疗/教育/政务等 20 个一句话完整案例 prompt），用户询问"能做什么/举个例子"时抽 3~5 个展示
+- `references/prompt-recipes.md` — 案例储备库（商城/金融/出行/外卖/点评/医疗/教育/政务/娱乐/资讯/智能硬件/创作/农业/环保/科技等 27 个一句话完整案例 prompt，覆盖互联网主流场景全分类），用户询问"能做什么/举个例子"时抽 3~5 个展示
 - `references/architecture.md` — 架构图与说明（可导出给用户）
 - `references/interview-notes.md` — 面试资料
 - `scripts/check_env.sh` — 环境检查（Java/Maven 版本，缺失时提示安装方式）
@@ -52,7 +53,14 @@ DSH 是 Java Agent 运行时基座（端口 8090），提供 Web 控制台、Age
 
 ### 阶段 0：澄清需求
 
+**help 触发（优先级最高，先于第一问）**：用户说「help / 帮助 / 你能做什么 / 有什么能力 / 不知道做什么」时，不要直接抛二选一问题，按 `references/prompt-recipes.md`「帮助菜单」节回复：一句话能力介绍（两条路径 + 三种交付形态 + 一句话即可完成开发部署）→ 27 案例分类菜单全貌 → 引导话术（回复编号/名称开工，或直接描述任意其他应用）。首次接触必须让用户看到「还能选什么」，而不是猜一个再说。
+
 **第一问（必问，二选一）**：你是想 **① 给现有的 Java 项目扩展 AI 能力**，还是 **② 做一个全新项目**？用选择框降低输入成本。
+
+**第二问（必问，三选一，用选择框）：项目以什么形态交付？** 选项措辞必须用下面这套（实测「独立可运行项目」这类说法会被误解为更高配，禁用）：
+1. **应用 + DSH 插件（AI 可调用）**——标准玩法：生成 `xxx-app`（业务应用）+ `xxx-plugin`（插件模块），插件把应用 API 注册为 Agent 工具，AI 在 DSH 对话中能查数据、做操作。三层结构：DSH Agent → 插件（对接器）→ 业务应用（HTTP）。说明中必须点明「应用和插件是一套交付的，插件就是 DSH 与应用之间的对接器」。
+2. **仅独立应用（不接 AI）**——只生成 `xxx-app`，无插件、不进 DSH 插件列表，AI 调不到它。适合只要业务系统本身、不要智能体能力的场景。展示时明确说「功能照常能用，但与 DSH 无关」。
+3. **先要设计 + 原型**——先不写代码，出实体表、工具清单、页面原型，用户确认方向后再开发。
 
 **路径 ①：给现有 Java 项目扩展 AI**
 1. 要项目本地路径或仓库地址，让用户一句话说明项目是什么
@@ -84,7 +92,8 @@ bash <skill_path>/scripts/start_harness.sh
 启动后打开 `http://127.0.0.1:8090`，「设置 → 模型设置 → 添加模型」配置模型地址/名称/API Key，否则 Agent 无法对话。
 
 ### 阶段 3：开发应用与插件
-**写码前必须先做场景深挖**（`references/prompt-recipes.md` 的「场景深挖」节）：实体表（ 工具表（入参/出参/description）→ 页面区块 → 预置数据 → 参照标杆（电商类参照 mall，UI 参照 50projects50days 与本技能案例源码），形成设计稿后再动手。
+**写码前必须先做场景深挖**（`references/prompt-recipes.md` 的「场景深挖」节）：实体表 → 工具表（入参/出参/description）→ 页面区块 → 预置数据 → 参照标杆（电商类参照 mall，UI 参照 50projects50days 与本技能案例源码），形成设计稿后再动手。
+**设计稿确认点（必做）**：设计稿完成后先给用户过目（实体/工具/页面/数据四块，紧凑呈现），用选择框确认「开工 / 要调整」，用户明确说「直接做」才可跳过——禁止闷头写码后才发现方向跑偏。
 **预置数据必须按「细腻度规范」写**（`references/prompt-recipes.md` 末节）：名称有品牌/编号、价格真实区间、数据间有故事、状态机完整；交付前逐条过 7 项验收清单，出现"路线A/商品A/示例数据"即为不合格重做。
 - 无应用：按 `references/plugin-dev-guide.md` 的 Spring Boot 应用骨架 + 插件骨架生成工程（Maven 多模块：`xxx-app` + `xxx-plugin`）
 - 有应用：只生成 `xxx-plugin` 模块，工具通过 HTTP 调应用 API
@@ -111,12 +120,17 @@ bash <skill_path>/scripts/smoke_test.sh
 - **UI 可用性**：页面各区块（图表/筛选/表单/AI 面板）逐一过一遍，确认无 JS 报错、数据渲染正确
 - 任一项失败 → 先修再继续，禁止"基本可用"就交付
 
+**部署形态（交付前确定，二选一）**：
+- **默认：本地起服务验证**——DSH 8090 + 应用 `java -jar --server.port=18081`（显式指定端口），本地完成全链路验证后再谈交付
+- **用户要云服务器部署**——构建产物验证通过后用 `bash <skill_path>/scripts/deploy_remote.sh -t user@host -a <应用jar> [-g <插件jar>] [-s skip]` 一键部署（上传 JAR → 生成远端 restart_all.sh → 启动 → 探活）；部署后注意：① 云安全组放行 8090 与应用端口 ② 插件需重新 install+activate（指向远端 DSH）③ 交付地址换成公网 IP，生命周期说明里写明重启命令 `ssh <host> 'bash /opt/dsh/restart_all.sh'` ④ 云部署后全部验证项（逐工具实测/UI/探活）必须在远端地址上重跑一遍，本地验证通过 ≠ 远端可用
+
 **交付前地址探活（必须刚刚执行过才算数）**：对每个要交给用户的地址跑 `curl --noproxy '*' -o /dev/null -w "%{http_code}"`，确认 HTTP 200；进程被回收就重新拉起再交付。禁止把历史地址或"应该能访问"的地址写给用户。
 
 - 交付时必须给出：
   - **确实可访问的地址**（刚探活确认）：DSH `http://<host>:8090`（默认模型渠道已配置，可直接对话）+ 应用 `http://<host>:<port>`
   - **体验流程说明**（按 `references/readme-delivery-template.md` 的「体验流程说明」节写，给使用者照做就能体验到完整闭环）：① 打开应用能看到什么 ② AI 面板在哪、逐条示例问题（注明触发哪个工具）③ DSH 控制台示例话术 ④ 写操作如何体验（AI 会先确认）
   - 插件工具清单（`plugin__<pluginId>__<tool>` 形式）与验证方法
+  - **服务生命周期说明（必给）**：告知服务跑在哪个机器/哪个进程上、长驻进程可能被回收；访问 404 时对助手说一句「重启服务」即可拉起（或给出明确的重启命令行）；内存型预置数据重启后自动还原，写操作产生的数据不保留
 - **交付前自检**：过 `references/prompt-recipes.md`「细腻度验收清单」7 项（数据密度/数据故事/零占位文案/数字算术/状态机/AI 有据/移动端），任一不过先修再交付
 - **最终交付清单（收尾必做）**：跑 `bash <skill_path>/scripts/delivery_check.sh <pluginId>`（探活/插件状态/鉴权回归自动项）→ 逐条过 `references/delivery-checklist.md` 手工项（**UI 必须真实浏览器点击验证**：弹层/抽屉开关、表单提交、toast——curl 测不出"弹层关不掉"这类 bug；改过全局机制必跑回归矩阵）→ 清单全勾才算交付
 
@@ -129,8 +143,23 @@ bash <skill_path>/scripts/smoke_test.sh
 
 其他附加资料按需：架构图 → `references/architecture.md`（含 Mermaid）。
 
+### 阶段 6：验收闭环与迭代（交付≠结束，链路不是直线）
+
+**验收确认（交付后必做）**：交付完必须向用户索要验收反馈（「打开两个地址过一遍体验流程，有要调的告诉我」），用户明确验收通过前任务不算完结；交付完不追问就收工是违规。
+
+**迭代循环（用户反馈修改时）**：
+- **小改动**（文案/预置数据/单个工具逻辑）：改完只重跑受影响工具的 `agent_stream.sh` 实测 + 地址探活 + UI 触及区块过一遍 → 重新交付，不必全量回归
+- **大改动**（新增工具/改数据模型/改全局机制如 Filter、拦截器）：重走阶段 3 设计确认 + 全链路验证 + `delivery_check.sh`，改全局机制必跑回归矩阵
+- 每次迭代同步更新 README 的工具清单与体验流程说明，禁止 README 与实际能力脱节
+
+**断点续作（跨会话恢复，用户说「继续/接着做」时）**：禁止从头重做，先做三件事再动手：
+1. **探活**：`curl --noproxy '*'` 探 DSH 8090 与应用端口，进程被回收就重新拉起
+2. **盘点**：查工程目录（app/plugin 模块、构建产物）、DSH 插件安装激活状态，对照本流程判断卡在哪个阶段
+3. **汇报**：向用户报当前进度（已完成什么/卡在哪/还剩什么）+ 下一步计划，然后继续执行
+
 ## Gotchas
 
+- 交付形态问法必须用阶段 0「第二问」的固定措辞，禁止出现「独立可运行项目」「插件交付」这类不带解释的裸选项——用户会误以为插件模式「不对接应用」、独立模式是更高配
 - 插件依赖 scope 必须 `provided`，否则 fat jar 与宿主类冲突加载失败
 - `plugin.yaml` 的 `entrypoint` 是**插件主类全限定名**，而 install 接口的 `entrypoint` 字段是 **JAR 文件名**，两者不同
 - install 接口 `sourcePath` 必须是宿主可访问的**绝对路径**
