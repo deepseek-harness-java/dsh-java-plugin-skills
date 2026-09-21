@@ -69,7 +69,8 @@ bash <skill_path>/scripts/start_harness.sh
 启动后打开 `http://127.0.0.1:8090`，「设置 → 模型设置 → 添加模型」配置模型地址/名称/API Key，否则 Agent 无法对话。
 
 ### 阶段 3：开发应用与插件
-**写码前必须先做场景深挖**（`references/prompt-recipes.md` 的「场景深挖」节）：实体表（字段级）→ 工具表（入参/出参/description）→ 页面区块 → 预置数据 → 参照标杆（电商类参照 mall，UI 参照 50projects50days 与本技能案例源码），形成设计稿后再动手。
+**写码前必须先做场景深挖**（`references/prompt-recipes.md` 的「场景深挖」节）：实体表（ 工具表（入参/出参/description）→ 页面区块 → 预置数据 → 参照标杆（电商类参照 mall，UI 参照 50projects50days 与本技能案例源码），形成设计稿后再动手。
+**预置数据必须按「细腻度规范」写**（`references/prompt-recipes.md` 末节）：名称有品牌/编号、价格真实区间、数据间有故事、状态机完整；交付前逐条过 7 项验收清单，出现"路线A/商品A/示例数据"即为不合格重做。
 - 无应用：按 `references/plugin-dev-guide.md` 的 Spring Boot 应用骨架 + 插件骨架生成工程（Maven 多模块：`xxx-app` + `xxx-plugin`）
 - 有应用：只生成 `xxx-plugin` 模块，工具通过 HTTP 调应用 API
 - 遵循两个案例的模式（见 case 文档）：plugin.yaml + SPI + AbstractHarnessPlugin + AbstractTool，提供构建命令 `mvn package -DskipTests`，构建必须亲自执行并确认 JAR 生成
@@ -87,11 +88,12 @@ bash <skill_path>/scripts/start_harness.sh
 bash <skill_path>/scripts/install_plugin.sh <plugin_jar路径> <pluginId> <版本> <入口Jar文件名>
 bash <skill_path>/scripts/smoke_test.sh
 ```
-交付时必须给出：
-- DSH 地址：`http://<host>:8090`（配置模型后即可对话）
-- 应用地址：`http://<host>:<port>`
-- 插件工具清单（`plugin__<pluginId>__<tool>` 形式）与验证方法（在 DSH 对话框直接用自然语言触发工具）
-- 「怎么用」说明：登录 DSH 控制台 → 配置模型 → 对话中让 Agent 调用插件工具；应用页面中 AI 入口（若有）代理到 DSH 的 `/api/agent/stream`
+- 交付时必须给出：
+  - DSH 地址：`http://<host>:8090`（配置模型后即可对话）
+  - 应用地址：`http://<host>:<port>`
+  - 插件工具清单（`plugin__<pluginId>__<tool>` 形式）与验证方法（在 DSH 对话框直接用自然语言触发工具）
+  - 「怎么用」说明：登录 DSH 控制台 → 配置中让 Agent 调用插件工具；应用页面中 AI 入口（若有）代理到 DSH 的 `/api/agent/stream`
+- **交付前自检**：过 `references/prompt-recipes.md`「细腻度验收清单」7 项（数据密度/数据故事/零占位文案/数字算术/状态机/AI 有据/移动端），任一不过先修再交付
 
 ### 阶段 5：附加资料（按需）
 用户要架构图 → `references/architecture.md`（含 Mermaid，可直接渲染或转图）；要说明文档/面试资料 → 对应 references 文件。
