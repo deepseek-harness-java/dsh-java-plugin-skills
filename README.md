@@ -62,6 +62,28 @@ AI Agent 技能包：帮助你**快速完成 deepseek-harness-java（DSH，Java 
 | MySQL 运维平台 | `references/case-dsh-java-mysql.md` | 管理后台型：库表巡检/慢 SQL 分析，端口 8091 |
 | 外卖订餐平台 | 实战交付案例 | 5 工具全链路实测，沉淀 8 条环境坑位（SERVER_PORT 劫持、插件热更新等） |
 
+## 启动后的浏览地址
+
+| 服务 | 地址 | 能看到什么 |
+|---|---|---|
+| DSH 控制台 | http://127.0.0.1:8090 | Agent 对话（SSE 流式）、插件管理（安装/激活）、模型设置 |
+| 智能客服商城（案例） | http://127.0.0.1:18080 | 商品网格 + 购物车 + AI 购物助手面板 |
+| MySQL 运维平台（案例） | http://127.0.0.1:8091 | 管理后台 + 只读运维工具对话 |
+| 新开发的应用 | http://127.0.0.1:18081 起 | 业务主界面 + 右下角 AI 助手面板 |
+
+> 具体项目的真实地址以该项目交付 README 为准（交付前逐一探活 HTTP 200 才写进去）；默认模型渠道已预配置，DSH 启动即可对话。
+
+## 交付产物总结（项目开发完成后你会得到）
+
+| # | 产物 | 说明 |
+|---|---|---|
+| 1 | **可运行业务应用** | `xxx-app` Spring Boot jar：业务主界面 + 内嵌 AI 助手面板（代理 DSH 流式接口），预置细腻度验收过的演示数据 |
+| 2 | **Java Native 插件** | `xxx-plugin` jar：3~6 个 Agent 工具（读/写分离，写操作带确认机制），已在 DSH 安装激活（ACTIVE） |
+| 3 | **可访问地址** | DSH 8090 + 应用端口，交付前刚刚探活确认，附服务生命周期说明（404 时如何重启） |
+| 4 | **验证记录** | 每个工具 ≥1 条自然语言实测（`agent_stream.sh` 输出工具调用轨迹）、边界拒绝用例、算术一致性校验、真实浏览器 UI 走查 |
+| 5 | **工程 README** | 一句话需求、服务地址、插件信息与工具清单、体验流程说明、预置数据说明、构建启动命令、环境坑位记录 |
+| 6 | **简历/面试材料** | STAR 项目模板 + 技术关键词 + 高频面试 7 问与答题要点（见下文） |
+
 ## 工作流程（六阶段）
 
 ```
@@ -137,7 +159,82 @@ DSH 是 Java Agent 运行时基座（端口 8090），提供 Web 控制台、Age
 - 工具在 Agent 中以 `plugin__<pluginId>__<toolName>` 命名暴露
 - 插件通过 HTTP 调用业务应用 API（不直接持有业务资源，注意超时/异常分类/脱敏）
 
-架构：**DSH Agent（8090）→ 插件（对接器）→ 业务应用（HTTP）**，Mermaid 图见 `references/architecture.md`。
+架构：**DSH Agent（8090）→ 插件（对接器）→ 业务应用（HTTP）**，完整分层职责与关键机制见 `references/architecture.md`。
+
+## 架构图
+
+```mermaid
+flowchart LR
+    U[用户浏览器] --> W[DSH Web 控制台 :8090]
+    U --> APP[业务应用 :18080/8091/...]
+    subgraph DSH [deepseek-harness-java 运行时基座]
+      W --> AG[Agent 运行时<br/>对话编排 / 流式输出]
+      AG --> MC[模型接入<br/>配置模型地址/Key]
+      AG --> PM[插件管理<br/>install/activate/run]
+      PM --> P1[Java Native 插件 A]
+      PM --> P2[Java Native 插件 B]
+    end
+    P1 -->|HTTP + service-token| APP
+    APP --> DB[(数据/资源)]
+```
+
+## 流程图（一次 AI 对话的工具调用链路）
+
+```mermaid
+sequenceDiagram
+    participant U as 用户（应用 AI 面板 / DSH 控制台）
+    participant A as Agent 运行时
+    participant M as LLM
+    participant P as Java Native 插件
+    participant APP as 业务应用（REST API）
+
+    U->>A: 自然语言提问（SSE 流式）
+    A->>M: 消息 + 工具清单（plugin__id__tool）
+    M-->>A: 选择工具 + 生成参数
+    A->>P: PRE_TOOL_USE Hook 审计 → 执行工具
+    P->>APP: HTTP 调用（service-token 鉴权）
+    APP-->>P: JSON 业务数据
+    P-->>A: ToolExecutionResult
+    A-->>U: step_break / tool_result 事件 + chunk 流式总结回答
+```
+
+## 简历与面试沉淀
+
+### 简历项目模板（STAR，3~5 行可直接粘贴）
+
+```markdown
+**<项目名>（<年份>）** — 个人全栈项目 | 技术栈：Java 17 / Spring Boot 3.x / Maven 多模块 / 原生前端
+- 基于 Java Agent 运行时基座（DeepSeek Harness），以 **Java Native Plugin（SPI + 类加载隔离）** 方式
+  为业务应用扩展 AI 能力，注册 <N> 个 Agent 工具（读 <M> 写 <K>），由 LLM 按语义自主编排调用
+- 设计 <插件-应用 HTTP 边界 + service-token 鉴权 + PRE/POST 工具审计 Hook + 写操作人工确认>，
+  兼顾能力开放与安全边界
+- 实现 SSE 流式对话、种子数据算术一致、端到端自动化验证脚本；<一个具体业务成果，带数字>
+```
+
+要点：数字具体（几个工具/模块/指标）、机制写清（插件怎么接入、安全边界在哪）、避免空话。
+
+### 技术关键词（按真实使用勾选）
+
+| 层 | 关键词 |
+|---|---|
+| 运行时/语言 | Java 17、Spring Boot 3.x、Maven 多模块、SPI（ServiceLoader）、类加载隔离 |
+| AI/Agent | Function Calling、Agent 工作流、系统提示词工程、工具 description 设计、SSE 流式、PRE/POST Hook 审计 |
+| 工程 | REST API、种子数据设计、端到端验证、插件生命周期（install/activate/deactivate） |
+| 安全 | service-token 服务间鉴权、最小权限边界、写操作确认机制 |
+
+### 高频面试 7 问（答题要点）
+
+| # | 问题 | 答题要点 |
+|---|---|---|
+| 1 | 插件怎么被宿主加载？ | SPI（`META-INF/services` + ServiceLoader）发现入口 → 独立类加载器加载 fat jar（依赖 scope=provided 防冲突）→ `plugin.yaml` 元数据 → install/activate 生命周期 |
+| 2 | Agent 怎么知道有哪些工具、何时调用？ | `tools()` 返回 ToolDefinition（name/description/JSON Schema），以 `plugin__<id>__<tool>` 注入模型；**description 质量决定调用准确率** |
+| 3 | 如何防止 AI 乱写数据？ | 写工具 description 声明风险 + 系统提示词硬规则（先确认参数）+ `isConcurrencySafe=false` + approvalMode + PRE/POST Hook 审计 |
+| 4 | 插件为什么不直连数据库？ | 安全边界：只经业务应用 HTTP API（service-token）访问，应用保留业务校验与审计单一入口；插件可独立升级 |
+| 5 | SSE 流式怎么实现？ | 服务端 SseEmitter，事件 meta/chunk/reasoning/step_break/tool_result/finish/done/error；客户端 fetch 解析 `event:`/`data:` 行；心跳保活 |
+| 6 | 怎么保证演示数据可信？ | 真实品牌/价格区间/数据故事，汇总由明细实时计算保证算术一致；脚本做"汇总=逐条加总"校验 |
+| 7 | 怎么验证 AI 真的调了工具？ | 看 SSE step_break/tool_result 事件的 toolName 与 result，核对回答数字与工具返回一致（`agent_stream.sh` 自动化） |
+
+> 完整模板与深度追问兜底：`references/readme-delivery-template.md`（README/简历/面试模板）、`references/interview-notes.md`（面试资料全集）。
 
 ## 关键 Gotchas
 
