@@ -138,7 +138,7 @@ dsh-java-plugin-skills/
 │   └── deepseek-harness-java-app.jar # DSH 宿主可执行 JAR（已带默认模型渠道，可直接端到端验证）
 └── references/                       # 参考文档（渐进式披露，按需加载）
     ├── plugin-dev-guide.md           # 插件开发全流程（含完整代码骨架，从真实案例提炼）
-    ├── ui-design-guide.md            # UI 设计指南（design tokens、无 AI 味清单、AI 面板规范、md 渲染）
+    ├── ui-design-guide.md            # UI 设计指南（design tokens、分域设计语言表、无 AI 味清单、AI 面板规范、md 渲染）
     ├── prompt-recipes.md             # 99 案例储备库 + 场景深挖卡片 + 细腻度规范
     ├── runtime-pitfalls.md           # 运行环境坑位与端到端验证指南
     ├── delivery-checklist.md         # 最终交付清单（自动化项 + 手工项 + 回归矩阵）
