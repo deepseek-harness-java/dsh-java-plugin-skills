@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 JAR="${1:-$SCRIPT_DIR/../runtime/deepseek-harness-java-app.jar}"
 PORT=8090
 
-if curl -fsS -o /dev/null --max-time 3 "http://127.0.0.1:$PORT"; then
+if curl -fsS --noproxy '*' -o /dev/null --max-time 3 "http://127.0.0.1:$PORT"; then
   echo "[SKIP] 端口 $PORT 已有服务在运行: http://127.0.0.1:$PORT"
   exit 0
 fi
@@ -18,11 +18,13 @@ if [ ! -f "$JAR" ]; then
 fi
 
 echo "[INFO] 启动 DSH: $JAR"
-nohup java -jar "$JAR" > /tmp/dsh-harness.log 2>&1 &
+# 显式 --server.port：沙箱/CI 可能注入 SERVER_PORT 环境变量，Spring relaxed binding 优先级高于 yml 会劫持端口
+nohup java -jar "$JAR" --server.port=$PORT > /tmp/dsh-harness.log 2>&1 &
 echo $! > /tmp/dsh-harness.pid
 
 for i in $(seq 1 60); do
-  if curl -fsS -o /dev/null --max-time 2 "http://127.0.0.1:$PORT"; then
+  # --noproxy：本机 curl 可能被 HTTP_PROXY 劫持返回 502
+  if curl -fsS --noproxy '*' -o /dev/null --max-time 2 "http://127.0.0.1:$PORT"; then
     echo "[OK] DSH 已启动: http://127.0.0.1:$PORT (pid $(cat /tmp/dsh-harness.pid))"
     echo "[TIP] 请到 控制台 -> 设置 -> 模型设置 配置模型地址/API Key 后再对话"
     exit 0

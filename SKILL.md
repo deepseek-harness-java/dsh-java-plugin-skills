@@ -4,7 +4,7 @@ description: 辅助用户快速完成 deepseek-harness-java（DSH Java，Java Ag
 license: Apache-2.0
 metadata:
   author: xfg-studio
-  version: "1.5.1"
+  version: "1.6.0"
   category: agent-plugin
   homepage: https://github.com/fuzhengwei/deepseek-harness
 ---
@@ -103,7 +103,7 @@ bash <skill_path>/scripts/start_harness.sh
 1. **先列实体再设计工具**：从业务场景提取核心实体（如研学旅游 = 营地/路线/排期/报名订单），每个"查询/详情/状态"类实体操作对应一个工具，通常 3~6 个
 2. **工具命名动词+宾语**：如 `search_routes`、`route_detail`、`enrollment_query`、`itinerary_query`；只读查询优先，写操作（报名/下单）需在 description 中声明风险
 3. **app 模块最小闭环**：REST API（list/detail/create）+ 内存预置数据（8 条左右）+ 单页前端（业务主界面 + AI 助手面板代理 DSH `/api/agent/stream`，参考 case-2d-weekend-mall 模式）
-   - **UI 必须遵守 `references/ui-design-guide.md`**：先定 design tokens（领域主色+暖白底+大圆角+系统字体栈），界面要像认真做过的产品，无 AI 味（禁止默认蓝紫渐变/emoji 图标/裸表格/Lorem ipsum）；AI 面板用右下角浮动按钮+侧滑流式渲染
+   - **UI 必须遵守 `references/ui-design-guide.md`**：先定 design tokens（领域主色+暖白底+大圆角+系统字体栈），界面要像认真做过的产品，无 AI 味（禁止默认蓝紫渐变/emoji 图标/裸表格/Lorem ipsum）；AI 面板用右下角浮动按钮+侧滑流式渲染，**AI 气泡必须走 markdown 渲染**（`renderMd` 轻量渲染器直接抄 ui-design-guide.md 第五节，禁止 `textContent` 裸显模型输出的 `**加粗**`/列表/标题；流式期间逐 chunk 实时渲染）
 4. **系统提示词划边界**：写明该业务工具何时必须调用（涉及真实数据必须查证）、禁止编造
 5. **application.yml 预留**：`harness-base-url`、`agent-id`、`service-token`（与插件配置对应）；改 token 后需停启插件
 
@@ -169,6 +169,7 @@ bash <skill_path>/scripts/smoke_test.sh
 - DSH 未配置模型时对话报错，先检查「设置 → 模型设置」
 - 端口约定：DSH 8090；案例应用 18080（商城）/ 8091（MySQL 平台），新应用避开这些端口
 - 新应用前端必须先读 `references/ui-design-guide.md` 并按其自检"AI 味清单"，出现 AI 味信号（默认蓝紫渐变/emoji 图标/裸表格/无 hover 过渡）即为不合格
+- **AI 气泡禁止 `textContent` 裸显模型回复**：模型输出是 markdown（`**加粗**`/`- 列表`/`###`），必须用 `renderMd` 渲染（代码见 ui-design-guide.md 第五节），流式期间逐 chunk 实时 `innerHTML` 重渲染；先 `escapeHtml` 防 XSS，用户气泡保持 `textContent`。交付清单 UI 层有对应检查项
 
 ### 运行环境坑位（沙箱/受限代理环境必看，详见 runtime-pitfalls.md）
 - **SERVER_PORT 环境变量劫持**：沙箱注入 `SERVER_PORT=<随机端口>`，Spring relaxed binding 优先级高于 yml，应用会绑错端口。启动一律显式 `java -jar app.jar --server.port=18081`

@@ -88,6 +88,74 @@
 - **流式渲染**：读 DSH `/api/agent/stream` SSE，逐字追加；AI 思考中显示三点脉冲动画
 - 工具调用过程可见：AI 消息中显示小标签「🔍 正在查询路线库…」增强真实感
 
+### AI 回复必须做 Markdown 渲染（硬性要求，禁止裸文本）
+
+**背景教训（外卖案例实测踩坑）**：模型回复默认输出 markdown（`**加粗**`、`- 列表`、`###` 小节）。AI 气泡若用 `textContent` 直接塞原文，用户看到的就是满屏星号和横杠星号列表，产品感尽毁。**AI 气泡一律走 md 渲染，且流式期间每个 chunk 实时重渲染**，用户看到的是逐步成型的排版而不是半截星号。
+
+标准实现（轻量渲染器，零依赖，直接抄进生成的前端）：
+
+```javascript
+// ---- 轻量 Markdown 渲染（AI 回复气泡专用，零依赖） ----
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function inlineMd(s) {
+  return s
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+function renderMd(src) {
+  const lines = escapeHtml(src).split('\n');
+  let html = '', listBuf = [];
+  const flushList = () => {
+    if (listBuf.length) {
+      html += '<ul>' + listBuf.map(i => '<li>' + inlineMd(i) + '</li>').join('') + '</ul>';
+      listBuf = [];
+    }
+  };
+  for (const raw of lines) {
+    const line = raw.replace(/\s+$/, '');
+    const li = line.match(/^\s*[-*•]\s+(.*)$/);
+    if (li) { listBuf.push(li[1]); continue; }
+    flushList();
+    if (!line.trim()) continue;
+    const h = line.match(/^(#{1,4})\s+(.*)$/);
+    if (h) { const lv = Math.min(h[1].length + 2, 5); html += `<h${lv}>` + inlineMd(h[2]) + `</h${lv}>`; continue; }
+    html += '<p>' + inlineMd(line.trim()) + '</p>';
+  }
+  flushList();
+  return html || '<p></p>';
+}
+```
+
+配套 CSS（AI 气泡关掉 `pre-wrap`，md 元素给紧凑间距）：
+
+```css
+.msg.ai .bubble { white-space: pre-wrap; }      /* 普通兜底文本 */
+.msg.ai .bubble.md { white-space: normal; }      /* md 渲染态 */
+.md p { margin: 0 0 8px; }  .md > :last-child { margin-bottom: 0; }
+.md ul, .md ol { margin: 2px 0 8px; padding-left: 20px; }
+.md li { margin: 3px 0; }
+.md h3, .md h4, .md h5 { margin: 10px 0 4px; font-weight: 600; }
+.md strong { font-weight: 600; }
+.md code { background: rgba(0,0,0,.07); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+```
+
+流式接入方式（每个 chunk 重渲染，不要等结束）：
+
+```javascript
+// SSE chunk 累积到 answer 后：
+if (answer) { bubble.classList.add('md'); bubble.innerHTML = renderMd(answer); }
+else bubble.textContent = '正在想…';
+```
+
+三条铁律：
+1. **先 `escapeHtml` 再拼 HTML**（渲染器已内置），杜绝模型输出注入 XSS；用户气泡保持 `textContent`
+2. **流式期间实时渲染**，不是结束后一次性渲染——这是"产品感"的一部分
+3. 不引外部 CDN 库（marked 等），应用要离线可跑；上面 40 行渲染器覆盖模型输出 95% 的格式（标题/列表/加粗/代码/链接）
+
 ## 六、参考资源（生成前可抓取学习）
 
 - 2d-weekend-mall 前端源码：`mall-app/src/main/resources/static/`（styles.css 362 行完整 tokens 实践，**首选参照**）

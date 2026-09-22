@@ -29,6 +29,7 @@ bash <skill_path>/scripts/delivery_check.sh [应用地址] [DSH地址] [pluginId
 
 ### UI 层（必须真实浏览器点击，curl 测不出"弹层关不掉"这类 bug）
 - [ ] 用 agent-browser 走一遍核心用户路径：打开页面 → 核心交互（弹层/抽屉/表单）→ 关闭 → 提交 → toast/联动
+- [ ] **AI 气泡 markdown 渲染检查**：AI 面板问一条会触发列表/加粗的问题（如"推荐几款"），确认 `**加粗**`、`- 列表`、`###` 标题被渲染成真实排版，而不是星号裸显（外卖案例曾整屏星号；规范与代码见 ui-design-guide.md 第五节）
 - [ ] 显隐切换检查：所有用 `hidden` 属性控显隐的元素，确认 CSS 没有写死 `display` 覆盖它（修复模式：全局 `[hidden]{display:none!important}`）
 - [ ] 每个按钮/入口实际点一遍，无 JS 报错、无静默无效
 - [ ] **agent-browser 排障技巧**：点击无效时先 `elementFromPoint`——返回 null = 坐标在视口外（自动化浏览器视口仅 ~650px 高），先 `scrollIntoView` 再点；不要误判为应用 bug
