@@ -9,6 +9,37 @@ AI Agent 技能包：帮助你**快速完成 deepseek-harness-java（DSH，Java 
 
 最终交付：**探活确认可访问的** DSH 地址 + 应用地址 + 插件安装激活完成 + 体验流程说明 + 完善的工程 README（含简历/面试沉淀），每个插件工具全链路实测通过。
 
+## 使用说明
+
+- **这是什么**：一个面向 DSH Java 的技能包，用一句话或案例编号即可生成业务应用 + Java Native 插件。
+- **怎么用**：直接告诉助手你的需求，或从 99 个案例里选一个；技能会完成生成、启动、插件安装与验证。
+- **适合谁**：想快速搭建业务系统、演示 AI 能力、或沉淀项目材料的人。
+- **前置条件**：JDK 17+ 与 Maven 3.9+，本机 8090/18081 等端口空闲。
+
+## 快捷体验流程
+
+1. 安装并启用本技能。
+2. 执行 `bash <skill_path>/scripts/check_env.sh` 检查 JDK/Maven。
+3. 执行 `bash <skill_path>/scripts/start_harness.sh` 启动 DSH。
+4. 对助手说：`就做 P1` 或直接描述需求。
+5. 按交付 README 打开应用地址，登录后右下角问 AI；再到 DSH 控制台验证工具调用。
+
+### 示例：P1 Digital Mall
+
+- 仓库：<https://github.com/deepseek-harness-java/digital-mall>
+- 商城：<http://127.0.0.1:18080>
+- DSH：<http://127.0.0.1:8090>
+- 账号：`customer-1 / 123456`
+
+**AI 对话案例**
+
+```text
+问：推荐两款适合通勤的数码产品，并说明为什么。
+答：为你挑了两款很适合通勤的数码产品：Sonic Air 4 降噪耳机（¥749，库存 58）和 Nova X14 轻薄笔记本（¥5999，库存 24）。前者更适合把地铁调成静音，后者更适合边通勤边办公。
+```
+
+![AI 对话截图](https://raw.githubusercontent.com/deepseek-harness-java/digital-mall/main/docs/images/assistant-chat.png)
+
 ## 它能做出什么项目
 
 ### 三种交付形态

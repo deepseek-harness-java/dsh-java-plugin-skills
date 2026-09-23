@@ -136,10 +136,12 @@ bash <skill_path>/scripts/smoke_test.sh
 
 ### 阶段 5：文档沉淀（必做，交付的一部分）
 开发验证完成后，**必须按 `references/readme-delivery-template.md` 产出/完善工程 README**，包含四块：
-1. **README 本体**：一句话需求、服务地址（探活后的真实地址）、插件信息、工具清单、体验流程说明、预置数据说明、构建与启动、环境坑位记录
+1. **README 本体**：使用说明、快捷体验流程、一句话需求、服务地址（探活后的真实地址）、插件信息、工具清单、体验流程说明、预置数据说明、构建与启动、环境坑位记录
 2. **简历项目模板**：STAR 3~5 行，数字具体、机制写清（模板见 reference）
 3. **技术关键词**：按真实使用情况勾选（Java 17 / Spring Boot 3.x / SPI / Function Calling / SSE / 插件生命周期…）
 4. **面试重点**：7 个高频追问 + 答题要点（模板已含，深度追问兜底 `references/interview-notes.md`）
+
+**README 截图要求**：截图不得重复；必须至少包含一张真实 AI 对话截图（能看到用户问题、模型回答或工具结果卡片）。
 
 其他附加资料按需：架构图 → `references/architecture.md`（含 Mermaid）。
 
