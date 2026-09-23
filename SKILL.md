@@ -143,6 +143,8 @@ bash <skill_path>/scripts/smoke_test.sh
 
 **README 截图要求**：截图不得重复；必须至少包含一张真实 AI 对话截图（能看到用户问题、模型回答或工具结果卡片）。
 
+**GitHub 仓库元数据**：About 描述必须用中文，写清业务场景与 AI 能力；仓库 topics 必须包含 `dsh-java` 与 `dsh-java-plugin`，可按项目补充业务领域标签（如 `spring-boot`、`ai-agent`、`mall`）。
+
 其他附加资料按需：架构图 → `references/architecture.md`（含 Mermaid）。
 
 ### 阶段 6：验收闭环与迭代（交付≠结束，链路不是直线）

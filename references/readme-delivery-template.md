@@ -63,6 +63,8 @@ bash <skill_path>/scripts/install_plugin.sh <jar> <pluginId> <版本> <入口Jar
 
 **截图质量红线**：README 中的截图不得互相重复；至少包含一张真实 AI 对话截图（能看到用户问题、模型回答或工具结果卡片）；不要用空白面板或同一页面的重复截图凑数。
 
+**GitHub 仓库元数据红线**：About 描述必须用中文，并明确「业务场景 + AI 能力」；topics 必须包含 `dsh-java` 和 `dsh-java-plugin`。
+
 ## 二、简历项目模板（STAR 压缩到 3~5 行，可直接粘贴）
 
 ```markdown
